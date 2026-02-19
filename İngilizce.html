@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LGS Kelime Deposu Pro</title>
+    <style>
+        :root { --p: #2c3e50; --s: #3498db; --ok: #27ae60; --no: #e74c3c; --bg: #f1f3f5; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .card { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 95%; max-width: 500px; text-align: center; }
+        .hidden { display: none; }
+        .word-box { font-size: 32px; font-weight: 800; color: var(--p); margin: 20px 0; min-height: 40px; }
+        .btn { display: block; width: 100%; padding: 14px; margin: 8px 0; border: 2px solid #eee; border-radius: 12px; background: white; cursor: pointer; font-size: 16px; font-weight: 600; transition: 0.2s; }
+        .btn:hover:not(:disabled) { border-color: var(--s); background: #f0faff; }
+        .start-btn { background: var(--s); color: white; border: none; font-size: 18px; margin-top: 15px; }
+        .correct { background: var(--ok) !important; color: white; border-color: var(--ok); }
+        .wrong { background: var(--no) !important; color: white; border-color: var(--no); }
+        .stats { margin-top: 20px; display: flex; justify-content: space-between; font-weight: bold; color: #7f8c8d; border-top: 2px solid #f1f1f1; padding-top: 15px; }
+        select { width: 100%; padding: 12px; border-radius: 10px; border: 2px solid #ddd; font-size: 16px; }
+        .progress-bar { height: 8px; background: #eee; border-radius: 4px; margin-bottom: 20px; overflow: hidden; }
+        #progress { height: 100%; background: var(--s); width: 0%; transition: 0.3s; }
+    </style>
+</head>
+<body>
+
+<div id="setup" class="card">
+    <h2>🎯 LGS Kelime Maratonu</h2>
+    <p>Ünitelerin tamamı 50-100 kelimeye çıkarıldı.</p>
+    <select id="uSelect"></select>
+    <button class="btn start-btn" onclick="start()">BAŞLAT</button>
+</div>
+
+<div id="quiz" class="card hidden">
+    <div class="progress-bar"><div id="progress"></div></div>
+    <div id="qWord" class="word-box">...</div>
+    <div id="options"></div>
+    <div class="stats">
+        <span>Puan: <span id="pText">0</span></span>
+        <span>Kalan: <span id="kText">0</span></span>
+    </div>
+</div>
+
+<script>
+    const data = {
+        "1": [["Back up", "Desteklemek"], ["Buddy", "Kanka"], ["Count on", "Güvenmek"], ["Get on well", "İyi geçinmek"], ["Stubborn", "İnatçı"], ["Honest", "Dürüst"], ["Generous", "Cömert"], ["Reliable", "Güvenilir"], ["Sneaky", "Sinsi"], ["Selfish", "Bencil"], ["Arrogant", "Kibirli"], ["Jealous", "Kıskanç"], ["Loyal", "Sadık"], ["Tactful", "Düşünceli"], ["Argue", "Tartışmak"], ["Support", "Destek"], ["Trust", "Güvenmek"], ["Secret", "Sır"], ["Share", "Paylaşmak"], ["Adventurous", "Maceracı"], ["Aggressive", "Saldırgan"], ["Amusing", "Eğlenceli"], ["Fair", "Adil"], ["Helpful", "Yardımsever"], ["Relaxed", "Rahat"], ["Unreliable", "Güvenilmez"], ["Bad-tempered", "Huysuz"], ["Caring", "Şefkatli"], ["Determined", "Kararlı"], ["Patient", "Sabırlı"], ["Understanding", "Anlayışlı"], ["Accept", "Kabul etmek"], ["Refuse", "Reddetmek"], ["Apologize", "Özür dilemek"], ["Excuse", "Mazeret"], ["Invitation", "Davet"], ["Reunion", "Yeniden buluşma"], ["Awesome", "Harika"], ["Beverage", "İçecek"], ["Attend", "Katılmak"], ["Opportunity", "Fırsat"], ["Bring", "Getirmek"], ["Celebrate", "Kutlamak"], ["Conversation", "Konuşma"], ["Customer", "Müşteri"], ["Dessert", "Tatlı"], ["Expect", "Beklemek"], ["Fashionable", "Modaya uygun"], ["Grateful", "Minnettar"], ["Organize", "Düzenlemek"]],
+        "2": [["Unbearable", "Dayanılmaz"], ["Trendy", "Modaya uygun"], ["Terrific", "Müthiş"], ["Ridiculous", "Saçma"], ["Skilled", "Yetenekli"], ["Routine", "Rutin"], ["Snob", "Züppe"], ["Impressive", "Etkileyici"], ["Ordinary", "Sıradan"], ["Follow", "Takip etmek"], ["Healthy", "Sağlıklı"], ["Exciting", "Heyecan verici"], ["Boring", "Sıkıcı"], ["Prefer", "Tercih etmek"], ["Fashion", "Moda"], ["Teenager", "Genç"], ["Adore", "Çok sevmek"], ["Campfire", "Kamp ateşi"], ["Casual", "Günlük kıyafet"], ["Daily", "Günlük"], ["Energetic", "Enerjik"], ["Fond of", "Düşkün olmak"], ["Harmonious", "Uyumlu"], ["Interested in", "İlgili olmak"], ["Loud", "Gürültülü"], ["Peaceful", "Huzurlu"], ["Rarely", "Nadiren"], ["Regularly", "Düzenli olarak"], ["Serious", "Ciddi"], ["Survey", "Anket"], ["Typical", "Tipik"], ["Voice", "Ses"], ["Activity", "Etkinlik"], ["Band", "Müzik grubu"], ["Bowling", "Bowling"], ["Can't stand", "Katlanamamak"], ["Exercise", "Egzersiz"], ["Go trekking", "Doğa yürüyüşü"], ["Training", "Antrenman"], ["Habit", "Alışkanlık"], ["Fit", "Formda"], ["Outdoor", "Dış mekan"], ["Self-disciplined", "Öz disiplinli"], ["Beat", "Ritim/Vuruş"], ["Concert", "Konser"], ["Enormous", "Devasa"], ["Huge", "Kocaman"], ["Insult", "Hakaret etmek"], ["Learn", "Öğrenmek"], ["Success", "Başarı"]],
+        "3": [["Knead", "Yoğurmak"], ["Whisk", "Çırpmak"], ["Chop", "Doğramak"], ["Dice", "Küp doğramak"], ["Fry", "Kızartmak"], ["Bake", "Fırında pişirmek"], ["Boil", "Haşlamak"], ["Grill", "Izgara yapmak"], ["Roast", "Fırında kızartmak"], ["Peel", "Kabuk soymak"], ["Squeeze", "Sıkmak"], ["Pour", "Dökmek"], ["Mix", "Karıştırmak"], ["Stir", "Sürekli karıştırmak"], ["Slice", "Dilimlemek"], ["Ingredient", "Malzeme"], ["Recipe", "Tarif"], ["Sour", "Ekşi"], ["Spicy", "Baharatlı"], ["Sweet", "Tatlı"], ["Tasty", "Lezzetli"], ["Bitter", "Acı"], ["Salty", "Tuzlu"], ["Drain", "Süzmek"], ["Mash", "Ezmek"], ["Preheat", "Önceden ısıtmak"], ["Sprinkle", "Serpiştirmek"], ["Amount", "Miktar"], ["Cuisine", "Mutfak kültürü"], ["Dish", "Yemek"], ["Dough", "Hamur"], ["Flour", "Un"], ["Garlic", "Sarımsak"], ["Oil", "Yağ"], ["Oven", "Fırın"], ["Pan", "Tava"], ["Serve", "Servis etmek"], ["Soup", "Çorba"], ["Teaspoon", "Çay kaşığı"], ["Vegetable", "Sebze"], ["Beef", "Sığır eti"], ["Butter", "Tereyağı"], ["Corn", "Mısır"], ["Flavor", "Lezzet"], ["Fork", "Çatal"], ["Fridge", "Buzdolabı"], ["Plate", "Tabak"], ["Rice", "Pirinç"], ["Step", "Adım"], ["Traditional", "Geleneksel"]],
+        "4": [["Hang up", "Telefonu kapatmak"], ["Hold on", "Beklemek"], ["Engaged", "Meşgul (hat)"], ["Available", "Müsait"], ["Connect", "Bağlanmak"], ["Dial", "Numara çevirmek"], ["Disturb", "Rahatsız etmek"], ["Extension", "Dahili hat"], ["Pick up", "Açmak (telefon)"], ["Memo", "Kısa not"], ["Keep in touch", "İletişimde kalmak"], ["Customer services", "Müşteri hizmetleri"], ["Appointment", "Randevu"], ["Communication", "İletişim"], ["Face to face", "Yüz yüze"], ["Leave a message", "Mesaj bırakmak"], ["Receiver", "Alıcı"], ["Sender", "Gönderici"], ["Text", "Mesaj yazmak"], ["Call back", "Geri aramak"], ["Put through", "Bağlamak"], ["Urgent", "Acil"], ["Social network", "Sosyal ağ"], ["Speak", "Konuşmak"], ["Smart phone", "Akıllı telefon"], ["Method", "Yöntem"], ["Develop", "Gelişmek"], ["Information", "Bilgi"], ["Contact", "İrtibat kurmak"], ["Polite", "Nazik"], ["Press", "Basmak"], ["Technology", "Teknoloji"], ["Busy", "Meşgul"], ["Flight ticket", "Uçak bileti"], ["Confirm", "Onaylamak"], ["Message", "Mesaj"], ["Phone call", "Telefon araması"], ["Respond", "Yanıtlamak"], ["Surprised", "Şaşırmış"], ["Useful", "Faydalı"], ["Way", "Yol/Yöntem"], ["Old-fashioned", "Eski moda"], ["Medicine", "İlaç"], ["Rescue", "Kurtarmak"], ["Donation", "Bağış"], ["Educate", "Eğitmek"], ["Collect", "Toplamak"], ["Bill", "Fatura"], ["Check", "Kontrol etmek"], ["Address", "Adres"]],
+        "5": [["Upload", "Yüklemek"], ["Download", "İndirmek"], ["Connection", "Bağlantı"], ["Browser", "Tarayıcı"], ["Log in", "Giriş yapmak"], ["Log out", "Çıkış yapmak"], ["Search engine", "Arama motoru"], ["Attachment", "Eklenti"], ["Account", "Hesap"], ["Confirm", "Onaylamak"], ["Delete", "Silmek"], ["Register", "Kayıt olmak"], ["Update", "Güncellemek"], ["Comment", "Yorum"], ["Password", "Şifre"], ["Privacy", "Gizlilik"], ["Screen", "Ekran"], ["Social media", "Sosyal medya"], ["Useful", "Faydalı"], ["Wireless", "Kablosuz"], ["Access", "Erişim"], ["Advantage", "Avantaj"], ["Avoid", "Kaçınmak"], ["Click", "Tıklamak"], ["Device", "Cihaz"], ["File", "Dosya"], ["Go online", "İnternete girmek"], ["Notification", "Bildirim"], ["Settings", "Ayarlar"], ["Sign in", "Oturum açmak"], ["Subscribe", "Abone olmak"], ["Keyboard", "Klavye"], ["Safety", "Güvenlik"], ["Internet addict", "İnternet bağımlısı"], ["Interaction", "Etkileşim"], ["Hacker", "Bilgisayar korsanı"], ["Effective", "Etkili"], ["Consequence", "Sonuç"], ["Complaint", "Şikayet"], ["Address", "Adres"], ["Addict", "Bağımlı"], ["Blogger", "Blog yazarı"], ["Chat room", "Sohbet odası"], ["Connect", "Bağlanmak"], ["Create", "Oluşturmak"], ["Disconnect", "Bağlantıyı kesmek"], ["E-mail", "E-posta"], ["Face-to-face", "Yüz yüze"], ["Follower", "Takipçi"], ["Hardware", "Donanım"], ["Information", "Bilgi"], ["Installation", "Kurulum"], ["Interpersonal", "Kişilerarası"], ["Live stream", "Canlı yayın"], ["Member", "Üye"], ["Online", "Çevrimiçi"], ["Offline", "Çevrimdışı"], ["Post", "Paylaşmak"], ["Purpose", "Amaç"], ["Reliable", "Güvenilir"], ["Search", "Aramak"], ["Secure", "Güvenli"], ["Social networking", "Sosyal ağ kurma"], ["Software", "Yazılım"], ["Stranger", "Yabancı"], ["Surface", "Yüzey"], ["Technological", "Teknolojik"], ["Usage", "Kullanım"], ["User", "Kullanıcı"], ["Website", "Web sitesi"], ["Wireless modem", "Kablosuz modem"], ["Worldwide", "Dünya çapında"], ["Habit", "Alışkanlık"], ["Negative", "Olumsuz"], ["Positive", "Olumlu"], ["Harmful", "Zararlı"], ["Refuse", "Reddetmek"], ["Accept", "Kabul etmek"], ["Improve", "Geliştirmek"], ["Share", "Paylaşmak"], ["Knowledge", "Bilgi"], ["Keep in touch", "İrtibatta kalmak"], ["Opinion", "Fikir"], ["Advice", "Tavsiye"], ["Attention", "Dikkat"], ["Check", "Kontrol etmek"], ["Correct", "Doğru"], ["Disturb", "Rahatsız etmek"], ["Exchange", "Takas"], ["Identity", "Kimlik"], ["Link", "Bağlantı"], ["Log on", "Sisteme girmek"], ["Pay attention", "Dikkat etmek"], ["Personal", "Kişisel"], ["Properly", "Düzgünce"], ["Rule", "Kural"], ["Safety guidelines", "Güvenlik rehberi"], ["Source", "Kaynak"], ["Strict", "Sert/Katı"], ["Virtual", "Sanal"]],
+        "6": [["Adrenaline seeker", "Adrenalin tutkunu"], ["Caving", "Mağaracılık"], ["Paragliding", "Yamaç paraşütü"], ["Challenging", "Zorlayıcı"], ["Bungee jumping", "Yüksekten atlama"], ["Rafting", "Rafting"], ["Skydiving", "Gök dalışı"], ["Equipment", "Ekipman"], ["Experience", "Deneyim"], ["Frightening", "Korkutucu"], ["Dangerous", "Tehlikeli"], ["Safe", "Güvenli"], ["Extreme", "Sıra dışı"], ["Amusing", "Eğlenceli"], ["Risk", "Risk"], ["Success", "Başarı"], ["Explorer", "Kaşif"], ["Freedom", "Özgürlük"], ["Mountain biking", "Dağ bisikleti"], ["Scuba diving", "Tüplü dalış"], ["Helmet", "Kask"], ["Life jacket", "Can yeleği"], ["Canoeing", "Kano sporu"], ["Base jumping", "Serbest düşüş"], ["Take risks", "Risk almak"], ["Compare", "Kıyaslamak"], ["Fascinating", "Büyüleyici"], ["Paddle", "Kürek çekmek"], ["Hang-gliding", "Yelken kanat"], ["Ice climbing", "Buz tırmanışı"], ["Motor-racing", "Motor yarışı"], ["Skateboarding", "Kaykay yapma"], ["Whitewater rafting", "Azgın su raftingi"], ["Adventure", "Macera"], ["Amazing", "Şaşırtıcı"], ["Courage", "Cesaret"], ["Disadvantage", "Dezavantaj"], ["Diving", "Dalış"], ["Excitement", "Heyecan"], ["Expert", "Uzman"], ["Goal", "Hedef"], ["Incredible", "İnanılmaz"], ["Landscape", "Manzara"], ["Mysterious", "Gizemli"], ["Prefer", "Tercih etmek"], ["Scary", "Korkunç"], ["Stunt", "Tehlikeli gösteri"], ["Tough", "Zorlu"], ["Various", "Çeşitli"], ["Wildlife", "Vahşi yaşam"]],
+        "7": [["Ancient", "Antik"], ["Architecture", "Mimari"], ["Sightseeing", "Yer görme gezisi"], ["Accommodation", "Konaklama"], ["Historical", "Tarihi"], ["All-inclusive", "Her şey dahil"], ["Souvenir", "Hediyelik eşya"], ["Castle", "Kale"], ["Countryside", "Kırsal alan"], ["Destination", "Gidilecek yer"], ["Resort", "Tatil yeri"], ["Province", "İl"], ["Climate", "İklim"], ["Traditional", "Geleneksel"], ["Attraction", "Cazibe merkezi"], ["Breathtaking", "Nefes kesici"], ["Exotic", "Egzotik"], ["Palace", "Saray"], ["Square", "Meydan"], ["Temple", "Tapınak"], ["Urban", "Kentsel"], ["Vacation", "Tatil"], ["Spectacular", "Muhteşem"], ["Rural", "Kırsal"], ["Island", "Ada"], ["Mosque", "Cami"], ["Museum", "Müze"], ["Palace", "Saray"], ["Resort", "Tatil köyü"], ["Seaside", "Deniz kenarı"], ["Tourist", "Turist"], ["Visit", "Ziyaret etmek"], ["Wonderful", "Harika"], ["Architecture", "Mimari"], ["Bridge", "Köprü"], ["Capital", "Başkent"], ["Cheap", "Ucuz"], ["City", "Şehir"], ["Cost", "Maliyet"], ["Culture", "Kültür"], ["Delicious", "Lezzetli"], ["Experience", "Deneyim"], ["Famous", "Ünlü"], ["Holiday", "Tatil"], ["Incredible", "İnanılmaz"], ["Location", "Konum"], ["Modern", "Modern"], ["Natural", "Doğal"], ["Relaxing", "Rahatlatıcı"], ["Stay", "Konaklamak"]],
+        "8": [["Responsible", "Sorumlu"], ["Task", "Görev"], ["Laundry", "Çamaşır"], ["Mow the lawn", "Çimleri biçmek"], ["Ironing", "Ütü yapmak"], ["Chores", "Ev işleri"], ["Dusting", "Toz almak"], ["Set the table", "Sofrayı kurmak"], ["Tidy up", "Toplamak"], ["Obey the rules", "Kurallara uymak"], ["Messy", "Dağınık"], ["Take out garbage", "Çöpü dışarı çıkarmak"], ["Vacuum", "Süpürmek"], ["Wash dishes", "Bulaşık yıkamak"], ["Duty", "Görev"], ["Helpful", "Yardımsever"], ["Respect", "Saygı duymak"], ["Share", "Paylaşmak"], ["Take care of", "İlgilenmek"], ["Dirty", "Kirli"], ["Clean", "Temizlemek"], ["Dishes", "Bulaşıklar"], ["Floor", "Zemin"], ["Garbage", "Çöp"], ["Habit", "Alışkanlık"], ["Kitchen", "Mutfak"], ["Library", "Kütüphane"], ["Necessary", "Gerekli"], ["Obligation", "Zorunluluk"], ["Pet", "Evcil hayvan"], ["Promise", "Söz"], ["Quiet", "Sessiz"], ["Rule", "Kural"], ["School", "Okul"], ["Social", "Sosyal"], ["Standard", "Standart"], ["Team", "Takım"], ["Together", "Birlikte"], ["Trust", "Güvenmek"], ["Uniform", "Üniforma"], ["Wash", "Yıkamak"], ["Weekend", "Hafta sonu"], ["Work", "Çalışmak"], ["Avoid", "Kaçınmak"], ["Borrow", "Ödünç almak"], ["Cooperate", "İş birliği yapmak"], ["Encourage", "Teşvik etmek"], ["Fair", "Adil"], ["Keep", "Tutmak"], ["Load", "Yüklemek"]],
+        "9": [["Discovery", "Keşif"], ["Invention", "İcat"], ["Vaccination", "Aşı"], ["Cell", "Hücre"], ["Scientific", "Bilimsel"], ["Experiment", "Deney"], ["Laboratory", "Laboratuvar"], ["Cure", "Tedavi"], ["Achievement", "Başarı"], ["Genetics", "Genetik"], ["High-tech", "Yüksek teknoloji"], ["Knowledge", "Bilgi"], ["Process", "Süreç"], ["Result", "Sonuç"], ["Space", "Uzay"], ["Substance", "Madde"], ["Explorer", "Kaşif"], ["Anatomy", "Anatomi"], ["Gravity", "Yerçekimi"], ["Solar system", "Güneş sistemi"], ["Brain", "Beyin"], ["Chemical", "Kimyasal"], ["Development", "Gelişim"], ["Discover", "Keşfetmek"], ["Disease", "Hastalık"], ["Education", "Eğitim"], ["Energy", "Enerji"], ["Engineer", "Mühendis"], ["Evidence", "Kanıt"], ["Explore", "Keşfetmek"], ["Field", "Alan"], ["Fossil", "Fosil"], ["History", "Tarih"], ["Human", "İnsan"], ["Identify", "Tanımlamak"], ["Information", "Bilgi"], ["Invent", "İcat etmek"], ["Measure", "Ölçmek"], ["Newest", "En yeni"], ["Observation", "Gözlem"], ["Operate", "Ameliyat etmek"], ["Physics", "Fizik"], ["Planet", "Gezegen"], ["Reason", "Neden"], ["Research", "Araştırma"], ["Science", "Bilim"], ["Scientist", "Bilim insanı"], ["Solution", "Çözüm"], ["Study", "Çalışmak"], ["Theory", "Teori"]],
+        "10": [["Landslide", "Heyelan"], ["Drought", "Kuraklık"], ["Avalanche", "Çığ"], ["Earthquake", "Deprem"], ["Flood", "Sel"], ["Hurricane", "Kasırga"], ["Erosion", "Erozyon"], ["Global warming", "Küresel ısınma"], ["Natural disaster", "Doğal afet"], ["Destroy", "Yıkmak"], ["Extinct", "Nesli tükenmiş"], ["Glacier", "Buzul"], ["Magnitude", "Büyüklük"], ["Pollution", "Kirlilik"], ["Recycle", "Geri dönüştürmek"], ["Shortage", "Kıtlık"], ["Tornado", "Hortum"], ["Waste", "Atık"], ["Wildfire", "Orman yangını"], ["Precautions", "Önlemler"], ["Action", "Eylem"], ["Affect", "Etkilemek"], ["Air", "Hava"], ["Balance", "Denge"], ["Cause", "Neden olmak"], ["Climate", "İklim"], ["Dam", "Baraj"], ["Damage", "Zarar"], ["Danger", "Tehlike"], ["Deforestation", "Ormansızlaşma"], ["Earth", "Dünya"], ["Eco-friendly", "Doğa dostu"], ["Effort", "Çaba"], ["Energy", "Enerji"], ["Environment", "Çevre"], ["Force", "Güç/Kuvvet"], ["Future", "Gelecek"], ["Impact", "Etki"], ["Increase", "Artış"], ["Island", "Ada"], ["Nature", "Doğa"], ["Ocean", "Okyanus"], ["Oxygen", "Oksijen"], ["Plant", "Bitki"], ["Protect", "Korumak"], ["Reduce", "Azaltmak"], ["Resource", "Kaynak"], ["Temperature", "Sıcaklık"], ["Threat", "Tehdit"], ["Water", "Su"]]
+    };
+
+    const unitNames = ["Friendship", "Teen Life", "In Kitchen", "On Phone", "Internet", "Adventures", "Tourism", "Chores", "Science", "Nature"];
+    let pool = [];
+    let score = 0;
+    let currentIdx = 0;
+    let totalInUnit = 0;
+
+    const select = document.getElementById("uSelect");
+    unitNames.forEach((n, i) => {
+        let o = document.createElement("option");
+        o.value = i + 1;
+        o.innerText = `Unit ${i+1}: ${n}`;
+        select.appendChild(o);
+    });
+
+    function start() {
+        const u = select.value;
+        pool = data[u].map(x => ({en: x[0], tr: x[1]}));
+        totalInUnit = pool.length;
+        score = 0;
+        document.getElementById("setup").classList.add("hidden");
+        document.getElementById("quiz").classList.remove("hidden");
+        ask();
+    }
+
+    function ask() {
+        if (pool.length === 0) {
+            alert("TEBRİKLER! Bu ünitedeki tüm kelimeleri bitirdin.");
+            location.reload();
+            return;
+        }
+
+        document.getElementById("kText").innerText = pool.length;
+        document.getElementById("pText").innerText = score;
+        document.getElementById("progress").style.width = ((totalInUnit - pool.length) / totalInUnit * 100) + "%";
+        
+        currentIdx = Math.floor(Math.random() * pool.length);
+        const item = pool[currentIdx];
+        document.getElementById("qWord").innerText = item.en;
+
+        let options = [item.tr];
+        let allAnswers = [];
+        Object.values(data).forEach(u => u.forEach(w => allAnswers.push(w[1])));
+
+        while(options.length < 4) {
+            let rand = allAnswers[Math.floor(Math.random() * allAnswers.length)];
+            if(!options.includes(rand)) options.push(rand);
+        }
+        options.sort(() => Math.random() - 0.5);
+
+        const optDiv = document.getElementById("options");
+        optDiv.innerHTML = "";
+        options.forEach(opt => {
+            const b = document.createElement("button");
+            b.className = "btn";
+            b.innerText = opt;
+            b.onclick = () => check(b, opt, item.tr);
+            optDiv.appendChild(b);
+        });
+    }
+
+    function check(btn, selected, correct) {
+        const btns = document.querySelectorAll("#options .btn");
+        btns.forEach(b => b.disabled = true);
+
+        if(selected === correct) {
+            btn.classList.add("correct");
+            score += 10;
+            pool.splice(currentIdx, 1);
+        } else {
+            btn.classList.add("wrong");
+            btns.forEach(b => { if(b.innerText === correct) b.classList.add("correct"); });
+        }
+        setTimeout(ask, 1000);
+    }
+</script>
+</body>
+</html>
